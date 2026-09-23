@@ -1,4 +1,4 @@
-# 2-адам: EKT AI / Agent
+#  AI / Agent
 
 Бұл модуль тек AI/Agent бөлігін орындайды. EKT HTTP клиенті, каталог индексі, backend HTTP route-тары және frontend осы модульге кірмейді. Оларды 1- және 3-адамдар `BackendTools`, `FileExtractor`, `ChatInput` интерфейстері арқылы қосады.
 

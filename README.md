@@ -1,4 +1,4 @@
-## 2-адамның AI/Agent модулі
+ AI/Agent модулі
 
 AI/Agent тапсырмасы TypeScript түрінде `packages/ai` ішіне қосылды. Іске қосу: `npm ci --ignore-scripts`, `npm run typecheck`, `npm test`, `npm run demo:ai` (Node.js 24+).
 
