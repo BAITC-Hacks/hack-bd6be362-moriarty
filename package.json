@@ -1,0 +1,14 @@
+{
+  "name": "ekt-agent-workspace",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "test": "node --test --test-isolation=none packages/ai/test/*.test.mjs",
+    "demo:ai": "node packages/ai/examples/snapshot-demo.mjs",
+    "demo:synthetic": "node packages/ai/examples/demo.ts",
+    "import:catalog": "node packages/ai/scripts/import-snapshot.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": { "typescript": "~5.9.3" }
+}
