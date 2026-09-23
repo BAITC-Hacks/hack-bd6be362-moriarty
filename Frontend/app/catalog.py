@@ -9,6 +9,12 @@ TERMS = {
     'notice': 'Бұл ekt.kz нақты коммерциялық шарттары емес. Серіктес деректерімен ауыстыру қажет.'
 }
 
+COMPANION_CATEGORIES = {
+    'breaker': ['cable', 'socket'],
+    'cable': ['breaker'],
+    'socket': ['cable'],
+}
+
 
 def search(query):
     q = query.lower().replace('с16', 'c16').replace('с25', 'c25')
@@ -53,3 +59,10 @@ def analogs(pid):
         if p['specifications'] == source['specifications']:
             results.append(dict(product=p, reason='Каталогтағы барлық негізгі параметрлері сәйкес: '+', '.join(f'{k}: {v}' for k,v in p['specifications'].items())+'. Нақты қолдануға жарамдылығын маман тексеруі керек.'))
     return results[:3]
+
+
+def companions(pid):
+    source = store.product(pid)
+    categories = COMPANION_CATEGORIES.get(source['category'], [])
+    return [p for p in store.products()
+            if p['id'] != pid and p['category'] in categories and store.stock(p) > 0][:3]

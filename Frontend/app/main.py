@@ -169,5 +169,9 @@ async def chat(request: Request, message: str=Form(...,max_length=4000), mode: s
         else:
             raise ValueError('Белгісіз режим.')
         # File contents are not persisted in history.
+        failures=store.search_result(sid,agent.failed_search(message,found,attachment))
+        if failures>=2 and agent.MANAGER_PHRASE not in answer:
+            answer+='\n\n'+agent.MANAGER_PHRASE
+        manager_offer=agent.MANAGER_PHRASE in answer
         store.remember(sid,message,answer)
-        return dict(answer=answer,products=found,cart=store.cart(sid),pending=store.pending(sid),mode=used,attachment=dict(name=attachment['name'],truncated=attachment.get('truncated',False)) if attachment else None)
+        return dict(answer=answer,products=found,cart=store.cart(sid),pending=store.pending(sid),mode=used,manager_offer=manager_offer,attachment=dict(name=attachment['name'],truncated=attachment.get('truncated',False)) if attachment else None)

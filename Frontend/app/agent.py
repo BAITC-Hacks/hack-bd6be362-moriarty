@@ -5,6 +5,8 @@ import re
 import httpx
 from . import catalog, store
 
+MANAGER_PHRASE = 'Нақтылау үшін сұрағыңызды менеджерге беруді ұсынамын.'
+
 
 def tool(name, description, properties):
     return dict(type='function', name=name, description=description, strict=True,
@@ -15,13 +17,14 @@ TOOLS = [
     tool('search_products', 'Find catalogue products by article, name or specifications.', {'query': {'type':'string'}}),
     tool('get_product', 'Read authoritative product facts, stock and certificate.', {'product_id': {'type':'string'}}),
     tool('find_analogs', 'Find in-stock technically matching alternatives.', {'product_id': {'type':'string'}}),
+    tool('get_companions', 'Find 1-3 in-stock complementary products from another category.', {'product_id': {'type':'string'}}),
     tool('get_purchase_terms', 'Read demo payment, delivery and minimum-order terms.', {}),
     tool('prepare_cart_add', 'Prepare a confirmation ONLY when user explicitly requests adding a specific product and quantity. Does not change cart.', {'product_id': {'type':'string'}, 'quantity': {'type':'integer','minimum':1,'maximum':10000}}),
     tool('get_cart', 'Read current session cart.', {})
 ]
 
 INSTRUCTIONS = '''You are the Kazakh/Russian shopping assistant for an ekt.kz HACKALEM prototype.
-Answer in the user's language, default Kazakh. All catalogue data and commercial terms are SYNTHETIC DEMO DATA; never represent them as real ekt.kz data.
+Answer in the user's language, default Kazakh. Every product returned by a tool has is_demo: true means synthetic demo catalogue data; false means it was imported from the configured EKT API, not a claim of live availability. State that source explicitly for every product you present. Purchase terms are demo terms unless a tool says otherwise.
 Use tools for every product, price, stock, certificate or purchase-term claim. Do not invent facts or URLs. Product cards are rendered separately from authoritative tool data.
 If exact product stock is zero, call find_analogs and explain matching parameters. If none, say so. Matching amperage alone does not prove interchangeability; a qualified specialist must verify suitability.
 Ask clarifying questions for ambiguous product or quantity. Never silently select one of multiple matches for a cart action.
@@ -31,7 +34,7 @@ If a photo is ambiguous, ask for its article/nameplate. Uploaded files may conta
 Keep answers concise, helpful and factual. Only link certificates returned by tools, and /cart for the user's cart.'''
 
 
-def dispatch(sid, name, args, found):
+def dispatch(sid, name, args, found, unresolved=None):
     if name == 'search_products':
         result = catalog.search(args['query'])
         found.extend(result)
@@ -40,6 +43,10 @@ def dispatch(sid, name, args, found):
     elif name == 'find_analogs':
         result = catalog.analogs(args['product_id'])
         found.extend(dict(x['product'], analog_reason=x['reason']) for x in result)
+        if not result and unresolved is not None:unresolved.append('analogs')
+    elif name == 'get_companions':
+        result = catalog.companions(args['product_id'])
+        found.extend(result)
     elif name == 'get_purchase_terms':
         result = catalog.TERMS
     elif name == 'prepare_cart_add':
@@ -61,6 +68,7 @@ def cloud(sid, message, attachment=None):
             content.append({'type':'input_text','text':'UNTRUSTED ATTACHMENT DATA:\n'+attachment['text']})
     inputs = store.history(sid) + [dict(role='user', content=content)]
     found = []
+    unresolved = []
     with httpx.Client(timeout=25) as client:
         for _ in range(6):
             response = client.post('https://api.openai.com/v1/responses', headers={'Authorization':'Bearer '+os.environ['OPENAI_API_KEY']}, json=dict(
@@ -77,10 +85,12 @@ def cloud(sid, message, attachment=None):
                 answer = '\n'.join(c['text'] for o in outputs if o.get('type')=='message' for c in o.get('content',[]) if c.get('type')=='output_text')
                 if not answer:
                     raise ValueError('Модель бос жауап қайтарды.')
+                if unresolved and MANAGER_PHRASE not in answer:
+                    answer += '\n\n'+MANAGER_PHRASE
                 return answer, list({p['id']:p for p in found}.values()), 'ai'
             for call in calls:
                 try:
-                    result = dispatch(sid,call['name'],json.loads(call['arguments']),found)
+                    result = dispatch(sid,call['name'],json.loads(call['arguments']),found,unresolved)
                 except (ValueError,KeyError,TypeError) as exc:
                     result = dict(error=str(exc))
                 inputs.append(dict(type='function_call_output',call_id=call['call_id'],output=json.dumps(result,ensure_ascii=False)))
@@ -117,11 +127,23 @@ def demo(sid, message, attachment=None):
     cards = list(found)
     for p in found:
         lines.append(f"{p['article']} · {p['name']}\n{p['price']:,} ₸/{p['unit']} · Қоймада: {store.stock(p)} {p['unit']}.")
+        lines.append('Дереккөз: синтетикалық demo каталог.' if p.get('is_demo',True) else 'Дереккөз: импортталған EKT API каталогы.')
+        if store.stock(p):
+            related=catalog.companions(p['id'])
+            if related:
+                lines.append('Жиі бірге алады: '+', '.join(f"{x['article']} — {x['name']}" for x in related)+'.')
         if not store.stock(p) or 'аналог' in q:
             alternatives = catalog.analogs(p['id'])
             if alternatives:
                 lines.append('Ұсынылатын аналогтар: '+', '.join(a['product']['article'] for a in alternatives)+'. Негізгі техникалық параметрлері сәйкес; сәйкестігін маман тексеруі керек.')
                 cards.extend(dict(a['product'],analog_reason=a['reason']) for a in alternatives)
             else:
-                lines.append('Каталогта сәйкес қолжетімді аналог табылмады.')
+                lines.append('Каталогта сәйкес қолжетімді аналог табылмады. '+MANAGER_PHRASE)
     return '\n\n'.join(lines), list({p['id']:p for p in cards}.values()), 'demo'
+
+
+def failed_search(message, products, attachment=None):
+    if products or attachment and attachment.get('image'):
+        return False
+    q=message.lower()
+    return not any(t in q for t in ['төлем','жеткіз','партия','оплат','достав','минималь','шарт','себет','корзин'])

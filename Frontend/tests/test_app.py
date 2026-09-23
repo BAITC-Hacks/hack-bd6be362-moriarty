@@ -3,7 +3,7 @@ import json
 import time
 import pytest
 from fastapi.testclient import TestClient
-from app import store, agent, uploads
+from app import store, agent, uploads, ekt_source
 from app.main import app
 
 
@@ -46,6 +46,21 @@ def test_zero_stock_analogs(client):
     assert 'аналог' in result['answer']
     assert any(p.get('analog_reason') for p in result['products'])
     assert all(p['specifications']==result['products'][0]['specifications'] for p in result['products'])
+
+
+def test_companions_are_in_stock_and_from_another_category(client):
+    source=store.product('p002')
+    related=agent.catalog.companions(source['id'])
+    assert 1 <= len(related) <= 3
+    assert all(p['category'] != source['category'] and store.stock(p) > 0 for p in related)
+
+
+def test_two_failed_searches_offer_manager(client):
+    first=post_chat(client,'Табылмайтын ерекше тауар').json()
+    second=post_chat(client,'Тағы да белгісіз бөлшек').json()
+    assert not first['manager_offer']
+    assert second['manager_offer']
+    assert agent.MANAGER_PHRASE in second['answer']
 
 
 def test_terms(client):
@@ -207,3 +222,16 @@ def test_ai_tool_loop_with_mocked_transport(client,monkeypatch):
     assert mode=='ai' and products[0]['id']=='p002'
     assert captured[1]['input'][-1]['type']=='function_call_output'
     assert not any(t['name']=='confirm_cart_add' for t in captured[0]['tools'])
+
+
+def test_ekt_source_reports_unavailable_api(monkeypatch):
+    class FakeClient:
+        def __init__(self,**kwargs):pass
+        def __enter__(self):return self
+        def __exit__(self,*args):pass
+        def get(self,*args,**kwargs):raise ekt_source.httpx.ConnectError('offline')
+    monkeypatch.setenv('EKT_API_LOGIN','test-login')
+    monkeypatch.setenv('EKT_API_PASSWORD','test-password')
+    monkeypatch.setattr(ekt_source.httpx,'Client',FakeClient)
+    with pytest.raises(RuntimeError,match='EKT API'):
+        ekt_source.fetch_catalog()
