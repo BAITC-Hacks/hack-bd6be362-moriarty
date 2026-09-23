@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>EKT AI — Электротехникалық өнімдер</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<!-- HEADER -->
+<header class="header">
+    <div class="container nav">
+
+        <a href="#" class="logo">
+            <span class="logo-icon">⚡</span>
+            <div>
+                <strong>EKT</strong>
+                <small>AI Assistant</small>
+            </div>
+        </a>
+
+        <nav>
+            <a href="#home">Басты бет</a>
+            <a href="#catalog">Каталог</a>
+            <a href="#about">AI көмекші</a>
+        </nav>
+
+        <button class="cart-button" id="cartButton">
+            🛒 Себет
+            <span id="cartCount">0</span>
+        </button>
+
+    </div>
+</header>
+
+
+<main>
+
+    <!-- HERO -->
+    <section class="hero" id="home">
+
+        <div class="container hero-content">
+
+            <div class="hero-text">
+
+                <span class="badge">
+                    ✨ Жасанды интеллект көмегімен
+                </span>
+
+                <h1>
+                    Электр жабдықтарын
+                    <span>оңай табыңыз</span>
+                </h1>
+
+                <p>
+                    Тауарды атауы, артикулы немесе техникалық
+                    сипаттамасы бойынша іздеңіз. AI көмекші
+                    қажетті өнімді немесе оның аналогын табуға көмектеседі.
+                </p>
+
+                <div class="search-box">
+
+                    <span>🔍</span>
+
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Мысалы: ABB C16 автомат..."
+                    >
+
+                    <button id="searchButton">
+                        Іздеу
+                    </button>
+
+                </div>
+
+                <div class="features">
+
+                    <span>✓ Қоймадағы қалдық</span>
+                    <span>✓ Техникалық сипаттама</span>
+                    <span>✓ Аналогтарды іздеу</span>
+
+                </div>
+
+            </div>
+
+            <div class="hero-card">
+
+                <div class="assistant-logo">
+                    🤖
+                </div>
+
+                <h3>EKT AI Assistant</h3>
+
+                <p>
+                    Сізге қажетті электротехникалық
+                    өнімді бірнеше секундта табуға көмектесемін.
+                </p>
+
+                <button id="heroChatButton">
+                    AI көмекшіден сұрау →
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- CATEGORIES -->
+    <section class="categories">
+
+        <div class="container">
+
+            <p class="section-label">
+                САНАТТАР
+            </p>
+
+            <h2>Қажетті жабдықты таңдаңыз</h2>
+
+            <div class="category-grid">
+
+                <button class="category active" data-category="Барлығы">
+                    <span>⚡</span>
+                    Барлығы
+                </button>
+
+                <button class="category" data-category="Автомат">
+                    <span>🔌</span>
+                    Автоматтар
+                </button>
+
+                <button class="category" data-category="Кабель">
+                    <span>〰️</span>
+                    Кабельдер
+                </button>
+
+                <button class="category" data-category="Розетка">
+                    <span>🔋</span>
+                    Розеткалар
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- PRODUCTS -->
+    <section class="products-section" id="catalog">
+
+        <div class="container">
+
+            <div class="section-header">
+
+                <div>
+                    <p class="section-label">
+                        КАТАЛОГ
+                    </p>
+
+                    <h2>Танымал тауарлар</h2>
+                </div>
+
+                <p id="productCount"></p>
+
+            </div>
+
+            <div
+                class="product-grid"
+                id="productGrid">
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- AI SECTION -->
+    <section class="ai-section" id="about">
+
+        <div class="container ai-section-content">
+
+            <div>
+
+                <p class="section-label light">
+                    EKT AI
+                </p>
+
+                <h2>
+                    Қандай тауар керек екенін білмейсіз бе?
+                </h2>
+
+                <p>
+                    AI көмекшіге қажетті параметрлерді жазыңыз.
+                    Жүйе каталогты тексеріп, сәйкес өнімдерді
+                    және олардың аналогтарын ұсынады.
+                </p>
+
+            </div>
+
+            <button id="openChatButton">
+                🤖 AI көмекшіні ашу
+            </button>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<!-- CART MODAL -->
+<div class="modal-overlay" id="cartModal">
+
+    <div class="cart-modal">
+
+        <div class="modal-header">
+
+            <div>
+                <p class="section-label">СЕБЕТ</p>
+                <h2>Сіздің тауарларыңыз</h2>
+            </div>
+
+            <button
+                class="close-button"
+                id="closeCart">
+                ×
+            </button>
+
+        </div>
+
+        <div id="cartItems"></div>
+
+        <div class="cart-footer">
+
+            <div>
+                <span>Жалпы:</span>
+                <strong id="cartTotal">
+                    0 ₸
+                </strong>
+            </div>
+
+            <button class="checkout-button">
+                Тапсырысты рәсімдеу
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="confirmModal">
+
+    <div class="confirm-modal">
+
+        <div class="confirm-icon">
+            🛒
+        </div>
+
+        <h3>Себетке қосу</h3>
+
+        <p id="confirmText"></p>
+
+        <div class="confirm-actions">
+
+            <button
+                class="cancel-button"
+                id="cancelAdd">
+                Бас тарту
+            </button>
+
+            <button
+                class="confirm-button"
+                id="confirmAdd">
+                Иә, қосу
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- CHAT BUTTON -->
+<button
+    class="floating-chat"
+    id="floatingChat">
+
+    <span>🤖</span>
+
+    <div>
+        <strong>AI көмекші</strong>
+        <small>Сұрақ қою</small>
+    </div>
+
+</button>
+
+
+<!-- CHAT -->
+<div class="chat-window" id="chatWindow">
+
+    <div class="chat-header">
+
+        <div class="chat-title">
+
+            <div class="bot-avatar">
+                🤖
+            </div>
+
+            <div>
+                <strong>EKT AI Assistant</strong>
+                <small>
+                    <span class="online"></span>
+                    Онлайн
+                </small>
+            </div>
+
+        </div>
+
+        <button id="closeChat">
+            ×
+        </button>
+
+    </div>
+
+
+    <div
+        class="chat-messages"
+        id="chatMessages">
+
+        <div class="message bot-message">
+
+            <div class="message-avatar">
+                🤖
+            </div>
+
+            <div class="message-content">
+
+                <p>
+                    Сәлем! 👋 Мен EKT AI көмекшісімін.
+                </p>
+
+                <p>
+                    Тауардың атауын, артикулын немесе
+                    қажетті параметрлерді жазыңыз.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="quick-questions">
+
+        <button>
+            C16 автомат бар ма?
+        </button>
+
+        <button>
+            Аналог тауып бер
+        </button>
+
+        <button>
+            Жеткізу шарттары
+        </button>
+
+    </div>
+
+
+    <div class="chat-input">
+
+        <input
+            type="text"
+            id="chatInput"
+            placeholder="Сұрағыңызды жазыңыз..."
+        >
+
+        <button id="sendMessage">
+            ➤
+        </button>
+
+    </div>
+
+</div>
+
+
+<footer>
+
+    <div class="container footer-content">
+
+        <div class="logo footer-logo">
+
+            <span class="logo-icon">
+                ⚡
+            </span>
+
+            <div>
+                <strong>EKT</strong>
+                <small>AI Assistant</small>
+            </div>
+
+        </div>
+
+        <p>
+            HACKALEM AI Hackathon Prototype
+        </p>
+
+    </div>
+
+</footer>
+
+
+<script src="script.js"></script>
+
+</body>
+</html>
