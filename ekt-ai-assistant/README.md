@@ -1,68 +1,163 @@
-# HACKALEM AI — frontend handoff
+# HACKALEM AI
 
-Person #3 scope only: Next.js App Router, TypeScript, Tailwind, frontend components, API client and explicit demo fixtures. The supplied workspace was empty. No teammate-owned backend, agent or shared files were created or modified.
+## 1. Жоба атауы
 
-## Run
+**HACKALEM AI — EKT клиенттеріне арналған AI кеңесшісінің веб-интерфейсі.**
 
-Use Node.js 22+ and pnpm 11.19.0. From this folder:
+## 2. Қысқаша сипаттама
 
-```sh
-cd apps/web
+Жоба электротехникалық тауарларды іздеу, сипаттамаларын білу, қоймадағы қалдықты тексеру және аналогтарды салыстыру жұмыстарын бір чатқа біріктіруге арналған. Негізгі пайдаланушылар — EKT сатып алушылары мен сатып алу мамандары.
+
+Осы тармақта **frontend, backend-пен байланысуға арналған API клиенті және бөлек Demo режимі** іске асырылған. Нақты каталог пен AI агентіне қосылу қосымша интеграцияны қажет етеді.
+
+## 3. Не іске асырылды
+
+- Қазақша және орысша чат интерфейсі, жылдам сұрақтар, жүктелу және қате күйлері.
+- Тауар карточкалары: берілген баға, сипаттамалар, қойма қалдығы және сертификат сілтемелері.
+- Backend ұсынған аналогтардың себептері мен айырмашылықтарын көрсету, салыстыру кестесі.
+- JPG, JPEG, PNG, PDF, Excel және Word файлдарын тіркеу интерфейсі.
+- Спецификация нәтижесін кестемен көрсету: табылған тауар, аналог, табылмаған жол және берілген сома.
+- Себетке қосар алдында тауарды, санын және бағасын тексеретін растау терезесі.
+- Сервер хабарлама ID-сін бергенде жауапты бағалау мүмкіндігі.
+- Backend берген дерек сапасы ескертулері мен жаңартылу мәліметтерін көрсету.
+- Компьютерге және телефонға бейімделген дизайн, айқын белгіленген Demo режимі.
+
+Баға, қалдық немесе сертификат жоқ болса, интерфейс оларды ойдан шығармайды.
+
+## 4. Шешім қалай жұмыс істейді
+
+1. Пайдаланушы **«AI консультант»** батырмасын ашады.
+2. Тауар атауын, артикулын немесе сұрағын жазады; қажет болса файл тіркейді.
+3. Live режимінде интерфейс сұранысты қолданбаның backend-іне жібереді. Файл үшін сервер берген attachment ID пайдаланылады.
+4. Backend жауабы мәтін, тауар карточкасы немесе құрылымды есеп ретінде көрсетіледі.
+5. **«Корзинаға қосу»** батырмасы алдымен растау терезесін ашады. Пайдаланушы растағаннан кейін ғана сұраныс жіберіледі.
+6. Сәттілік пен себет сілтемесі backend жауабында болғанда ғана көрсетіледі.
+
+Demo режимінде жауаптар қолмен таңдалған дайын сценарийлерден алынады. Бұл режим файлды талдамайды және нақты себетті өзгертпейді.
+
+## 5. Технологиялар
+
+| Технология | Қолданылуы |
+| --- | --- |
+| TypeScript | Типтер және интерфейс логикасы |
+| Next.js 16.3.5, App Router | Веб-қосымша құрылымы |
+| React 19.3.0 | Компоненттер және интерфейс күйі |
+| Tailwind CSS 4.3.3 және CSS | Дизайн, бейімделетін орналасу |
+| Zod | Backend жауабының құрылымын тексеру |
+| Lucide React | Интерфейс белгішелері |
+| Fetch API | Қолданба backend-іне HTTP сұраныстар |
+| Playwright | Браузердегі автоматтандырылған тексерулер |
+| pnpm 11.19.0 | Тәуелділіктерді басқару |
+
+Тексерілген frontend кодында нақты LLM провайдері, AI моделі немесе OpenAI API шақыруы жоқ.
+
+## 6. Жоба архитектурасы
+
+Осы README орналасқан `ekt-ai-assistant/` папкасының құрылымы:
+
+```text
+apps/web/
+├── app/                 # Басты бет, layout және стильдер
+├── src/
+│   ├── components/      # Чат, тауар, файл, себет, есеп интерфейстері
+│   ├── hooks/           # Хабарлама және файл жүктеу күйі
+│   ├── lib/             # API клиенті, валидация, сессия
+│   ├── types/           # Деректер келісімшарты және UI типтері
+│   └── demo/            # Бөлек демонстрациялық жауаптар
+└── tests/               # Playwright сценарийлері
+docs/                    # Интеграция, demo және тексеру құжаттары
+screenshots/             # Интерфейс скриншоттары
+```
+
+Байланыс тізбегі: **пайдаланушы → React интерфейсі → API клиенті → қолданба backend-і → жауапты тексеру → экранда көрсету**.
+
+Frontend қорғалған EKT API-іне тікелей қосылмайды. Каталог, AI пайымдауы, файл талдауы және себет операциялары серверлік интеграцияға тиесілі.
+
+## 7. Орнату және іске қосу
+
+Қажет: **Node.js 22 немесе жаңарақ нұсқа**, **pnpm 11.19.0**.
+
+Командаларды командалық репозиторийдің түбірінен орындаңыз:
+
+```powershell
+cd ekt-ai-assistant/apps/web
 pnpm install --frozen-lockfile
-cp .env.example .env.local
+Copy-Item .env.example .env.local
+```
+
+Егер терминал `ekt-ai-assistant/` папкасында ашылса, бірінші команда орнына `cd apps/web` қолданыңыз. Linux/macOS үшін файлды көшіру командасы: `cp .env.example .env.local`.
+
+Backend-сіз демонстрация үшін `.env.local` файлына:
+
+```dotenv
+NEXT_PUBLIC_API_BASE_URL=
+NEXT_PUBLIC_DEMO_MODE=true
+NEXT_PUBLIC_UI_EXTENSIONS=false
+```
+
+```powershell
 pnpm dev
 ```
 
-On PowerShell, use `Copy-Item .env.example .env.local` instead of `cp` if preferred. Open http://127.0.0.1:3000 and click **AI консультант**. The development server binds to loopback by default.
+Браузерде [http://127.0.0.1:3000](http://127.0.0.1:3000) ашыңыз.
 
-```sh
-pnpm typecheck
+Live режимі үшін `NEXT_PUBLIC_DEMO_MODE=false` орнатып, `NEXT_PUBLIC_API_BASE_URL` мәніне қолданба backend-інің адресін беріңіз. Бос адрес сол домендегі `/api/*` жолдарына сұраныс жібереді. `NEXT_PUBLIC_UI_EXTENSIONS=true` тек қосымша жауап өрістері командамен келісілгенде қосылады. Өзгерістен кейін серверді қайта іске қосыңыз; production үшін қайта build жасаңыз.
+
+Production нұсқасын жергілікті іске қосу:
+
+```powershell
 pnpm build
 pnpm start
+```
+
+## 8. Шешімді қалай тексеруге болады
+
+Қазылар backend-сіз қайталай алатын Demo сценарийі:
+
+1. Demo режимін қосып, **«AI консультант»** терезесін ашыңыз.
+2. Сценарий тізімінен `product` таңдап, **«027228 бар ма?»** деп жіберіңіз. Тауар карточкасын тексеріңіз.
+3. `stock` таңдап, жаңа хабарлама жіберіңіз. **«Толық ақпарат»** арқылы қоймалар тізімін ашыңыз.
+4. `analog` таңдап, хабарлама жіберіңіз. Ұсынылу себептері мен айырмашылықтарын салыстырыңыз.
+5. `cart` таңдап, **«2 дана керек»** деп жазыңыз. **«Қосуды растау · 2»** арқылы модалды ашыңыз. Алдымен бас тартып, кейін қайта ашып растаңыз: нәтиже тек демонстрациялық екенін тексеріңіз.
+6. `estimate` таңдап, Excel/PDF тіркеп жіберіңіз. Дайын есеп үлгісі көрсетіледі; файл мазмұны оқылмайды.
+7. `missing` және `error` сценарийлерімен толық емес деректер мен қате күйін тексеріңіз.
+
+Әр сценарийді таңдау келесі хабарламаның үлгі жауабын анықтайды; Demo пайдаланушы мәтінінің мағынасын талдамайды.
+
+Автоматты тексерулер:
+
+```powershell
+pnpm typecheck
 pnpm exec playwright install chromium
 pnpm test
 ```
 
-Tests start isolated live-adapter and demo servers on ports 3100/3101 and intercept application backend requests in the browser. These tests do not test or implement a real backend. Screenshots are saved to `screenshots/` at the project root. To use a physical phone on a trusted local network, start `pnpm exec next dev --hostname 0.0.0.0` and use your computer's LAN address.
+[Тексеру жазбасында](docs/verification.md) production build пен **9 браузер тестінің** сәтті өткені тіркелген. Тесттер бақыланатын backend жауаптарын қолданады; бұл нақты EKT интеграциясын растау емес.
 
-## Environment
+## 9. Деректер және интеграциялар
 
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `NEXT_PUBLIC_API_BASE_URL` | empty | Application backend origin; empty calls same-origin `/api/*`. Example: `http://localhost:8000`. No EKT host or credentials. |
-| `NEXT_PUBLIC_DEMO_MODE` | `false` | `true` enables visibly labeled, deterministic UI fixtures. It never activates automatically after a live failure. |
-| `NEXT_PUBLIC_UI_EXTENSIONS` | `false` | Enable only after teammates approve the optional response fields in `docs/frontend-integration.md`. |
+| Қолданба endpoint-і | Мақсаты |
+| --- | --- |
+| `POST /api/chat` | Сессия ID-сі, хабарлама және attachment ID тізімін жіберу |
+| `POST /api/files` | Файлды серверге multipart форматында жүктеу |
+| `POST /api/feedback` | Сервер хабарлама ID-сі бойынша `up` немесе `down` бағасын жіберу |
 
-No secrets are required. `NEXT_PUBLIC_*` values are bundled into browser code; restart development or rebuild production after changing them. Internal test variable `NEXT_DIST_DIR` isolates build output and is not an integration setting.
+Demo деректері `apps/web/src/demo/demoResponses.ts` ішінде сақталған. Олар нақты уақыттағы баға немесе қалдық ретінде ұсынылмайды.
 
-## Components implemented
+Файлдың өңделгені тек `{ attachmentId, status: "processed" }` жауабынан кейін қабылданады. Бұл жауап пішімі мен қосымша құрылымды өрістер backend командасымен келісілуі керек. Толығырақ: [интеграция құжаты](docs/frontend-integration.md).
 
-- ChatLauncher, ChatPanel, ChatHeader, MessageList, MessageBubble, MessageComposer, QuickSuggestions.
-- ProductCard, ProductDetails, StockList, CertificateList, AnalogCard, DataWarning, DataFreshnessBadge.
-- FileUploader, FileAttachmentPreview, ConfirmationModal, CartSuccess.
-- SpecEstimateView, ProductCompareView, MessageFeedback.
+## 10. Шектеулер
 
-The chat supports Kazakh and Russian UI, native modal keyboard focus and Escape behavior, warehouse expansion, attachment states, loading/errors, and mobile full-screen layout. The surrounding demonstration landing page is Kazakh. AI/backend messages are rendered as text and retain the language returned by the backend.
+- Тексерілген тармақта жұмыс істейтін HTTP backend, EKT клиенті және LLM интеграциясы жоқ; толық жүйелік сценарий әлі расталмаған.
+- OCR, PDF/Excel/Word мазмұнын талдау және тауар іздеу frontend ішінде орындалмайды.
+- Live режимінде топтық себет әрекеті өшірулі. Растау, баға/қалдық тексеруі және қайталанған операциядан қорғау серверде орындалуы тиіс.
+- Құрылымды аналогтар, есептер және freshness үшін қосымша жауап келісімі қажет. Сервер хабарлама ID-сін бермесе, feedback қолжетімсіз.
+- UI бір хабарламаға бес файлға дейін, әр файлға 20 MiB шегін қолданады; сервер шектеулері бөлек келісіледі.
+- Чат тарихы бет жаңарғанда жоғалады. Тұрақты тарих пен авторизация осы нұсқада іске асырылмаған.
+- Мобильді орналасу браузер өлшемдерімен тексерілген; нақты телефон пернетақтасымен және басқа браузерлермен толық тексеру жүргізілмеген.
 
-## Integration and scope
+## 11. Жарияланған нұсқа
 
-The client calls only `POST /api/chat`, `POST /api/files`, and `POST /api/feedback` on the application backend. There are no API routes, EKT credentials, product search algorithms, ranking, file parsing, OCR, AI calls, databases, or cart implementations in this deliverable.
+Тексерілген файлдарда жарияланған жұмыс істейтін сайттың URL-і көрсетілмеген. [http://127.0.0.1:3000](http://127.0.0.1:3000) — тек өз компьютеріңіздегі жергілікті адрес.
 
-`src/types/contract.ts` is an unchanged local fallback of the supplied contract. When merging into the team repository, point the `@contract` path in `apps/web/tsconfig.json` to the actual `packages/shared/types.ts` (for this layout: `../../packages/shared/types.ts`) and resolve any differences against the actual shared contract. Do not copy the fallback over teammates' types.
-
-See [frontend integration and teammate TODOs](docs/frontend-integration.md), [demo instructions](docs/demo-script.md), and [created-file inventory](docs/files-created.md).
-
-## Known limitations
-
-- There is no backend in this workspace. Default/live requests return honest unavailable states until the application backend is configured or routed on the same origin. No end-to-end live EKT integration has been claimed.
-- The supplied shared contract lacks server message IDs, structured analog explanations, estimates, comparisons, and freshness. Those optional UI adapters are off in live mode by default. Feedback buttons remain disabled without a server-provided message ID; browser-generated IDs are never substituted.
-- Upload response shape is proposed, not agreed. Only `{ attachmentId, status: "processed" }` is accepted as successful processing. Async jobs/polling and other backend envelopes require an agreed adapter. There is no frontend parsing. UI limits are 20 MiB per file and five attachments per draft; backend security and limits remain authoritative.
-- Single-cart confirmation sends explicit text through the unchanged chat envelope. Person #2 must enforce confirmation, correct action binding, quantity/stock rules and duplicate protection server-side. Free-text chat can also express confirmation; frontend UI cannot replace agent-side enforcement.
-- Bulk cart is disabled in live mode because no bulk contract exists. Its confirmation interaction is demonstrable only in explicit demo mode. Only rows marked `found` are included; analogs require separate confirmation.
-- A failed confirmation response can mean an unknown result. The UI asks the user to check their cart before repeating; it never retries mutations automatically. There is no idempotency protocol in the supplied contract.
-- Demo uses manually selected scenarios. It does not interpret chat intent, parse files, or mutate a real cart. Its success fixture deliberately has no cart URL.
-- Chat history and selected language live in React memory. Only a random session ID is held in sessionStorage. Reloading clears the visible transcript. Authentication/history and manager escalation are outside this frontend delivery.
-- “Онлайн” means a chat response was received in this UI session, not a continuous health check. Missing freshness stays hidden; supplied cache age is displayed without inventing an update time.
-- Automated browser coverage is Chromium with desktop/mobile viewport tests. A physical iOS/Android keyboard and cross-browser review remain recommended before deployment.
-
-Framework setup follows the official [Next.js App Router installation guide](https://nextjs.org/docs/app/getting-started/installation) and [Tailwind Next.js guide](https://tailwindcss.com/docs/installation/framework-guides/nextjs).
+[GitHub-тағы frontend тармағы](https://github.com/BAITC-Hacks/hack-bd6be362-moriarty/tree/frontend/hackalem-ui/ekt-ai-assistant) — бастапқы кодқа сілтеме.
