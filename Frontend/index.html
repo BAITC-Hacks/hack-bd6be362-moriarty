@@ -11,6 +11,27 @@
 
 <body>
 
+<aside class="sidebar">
+    <a href="#home" class="brand-lockup">
+        <span class="brand-mark">↯</span>
+        <span class="brand-word">ekt<span>.</span></span>
+        <small>СІЗДІҢ ЭЛЕКТР СЕРІКТЕСІҢІЗ</small>
+    </a>
+    <div class="sidebar-nav">
+        <a class="side-link active" href="#about"><span>✦</span> ЖИ кеңесші <em>AI</em></a>
+        <a class="side-link" href="#catalog"><span>▦</span> Тауарлар каталогы</a>
+        <a class="side-link" href="#cart"><span>□</span> Менің себетім <b id="sideCartCount">0</b></a>
+    </div>
+    <div class="sidebar-prompt">
+        <div class="prompt-spark">✦</div>
+        <h2>Дұрыс таңдау.<br>Бір диалогта.</h2>
+        <p>Тауарды табыңыз, салыстырыңыз және себетке қосыңыз.</p>
+    </div>
+    <div class="sidebar-footer"><strong>HACKALEM AI</strong><span>2026</span></div>
+</aside>
+
+<div class="workspace">
+
 <!-- HEADER -->
 <header class="header">
     <div class="container nav">
@@ -61,6 +82,8 @@
                     сипаттамасы бойынша іздеңіз. AI көмекші
                     қажетті өнімді немесе оның аналогын табуға көмектеседі.
                 </p>
+
+                <div class="demo-note"><strong>DEMO</strong><span>Тауарлар, бағалар және жеткізу шарттары — тестілік. Бұл нақты ekt.kz дүкені емес.</span></div>
 
                 <div class="search-box">
 
@@ -214,6 +237,8 @@
 
 </main>
 
+</div>
+
 
 <!-- CART MODAL -->
 <div class="modal-overlay" id="cartModal">
@@ -246,7 +271,7 @@
                 </strong>
             </div>
 
-            <button class="checkout-button">
+            <button class="checkout-button" id="checkoutButton">
                 Тапсырысты рәсімдеу
             </button>
 
@@ -380,6 +405,11 @@
 
 
     <div class="chat-input">
+
+        <label class="attachment-button" title="Файл тіркеу">
+            📎
+            <input type="file" id="attachmentInput" accept=".xlsx,.xls,.docx,.doc,.pdf,.jpg,.jpeg,.png">
+        </label>
 
         <input
             type="text"
