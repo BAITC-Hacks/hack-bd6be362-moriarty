@@ -1,0 +1,7 @@
+{
+  "name": "ekt-data-backend",
+  "private": true,
+  "type": "module",
+  "scripts": { "start": "node --env-file-if-exists=.env src/server.js", "test": "node --test" },
+  "engines": { "node": ">=22" }
+}
