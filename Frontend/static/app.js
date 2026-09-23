@@ -75,6 +75,11 @@ function action(parent,label,handler){
   const button=el('button','agent-action',label);button.type='button';button.dataset.ektAction='true';button.disabled=state.busy;
   button.onclick=()=>Promise.resolve().then(handler).catch(error=>toast(error.message));parent.append(button);
 }
+function contactManager(question){
+  const subject=encodeURIComponent('EKT Assistant: менеджер көмегі қажет');
+  const body=encodeURIComponent('Сәлеметсіз бе! Менеджер көмегі қажет сұрақ:\n\n'+question+'\n\nБұл хатты пайдаланушы өзі жібермейінше жіберілмейді.');
+  location.href='mailto:manager@ekt.kz?subject='+subject+'&body='+body;
+}
 function addMessage(role,text){
   $('messages').querySelector('.welcome')?.remove();
   const node=el('div','message '+role); node.append(el('span','label',role==='user'?'СІЗ':role==='error'?'ХАБАРЛАМА':'EKT ASSISTANT'));
@@ -139,7 +144,7 @@ function renderProducts(products){
     top.append(el('span','article',p.article),el('span','stock'+(!amount?' empty':''),amount?`${amount} ${p.unit} бар`:'Қоймада жоқ'));
     const visual=el('div','product-visual'),device=el('div','device '+p.category);visual.setAttribute('aria-hidden','true');device.append(el('span','',p.category==='breaker'?'C'+p.specifications.current_a:''));visual.append(device);
     const short=Object.entries(p.specifications).slice(0,3).map(([k,v])=>`${labels[k]||k}: ${v}`).join(' · ');
-    card.append(top,visual,el('div','product-brand',p.brand),el('h3','',p.name),el('div','specs',short));
+    card.append(top,visual,el('div','product-brand',p.brand),el('h3','',p.name),el('div','specs',short),el('div','product-source',p.is_demo?'Синтетикалық demo дерегі':'Импортталған EKT API дерегі'));
     if(p.analog_reason)card.append(el('p','analog-reason',p.analog_reason));
     const price=el('div','product-price',money(p.price)+' ');price.append(el('small','',`/ ${p.unit}`));card.append(price);
     const actions=el('div','product-actions'),quantity=el('input');quantity.type='number';quantity.min='1';quantity.max=String(Math.max(amount,1));quantity.value='1';quantity.setAttribute('aria-label',p.article+' саны');
@@ -172,8 +177,9 @@ async function send(text){
     try{
       const result=await api('/api/chat',{method:'POST',body:data});
       const reply=addMessage('assistant',result.answer);
-      if(result.notice)reply.append(el('small','',result.notice));
-      if(result.products?.length){
+       if(result.notice)reply.append(el('small','',result.notice));
+       if(result.manager_offer)action(reply,'Менеджерге жазу',()=>contactManager(message));
+       if(result.products?.length){
         ++searchVersion;renderProducts(result.products);
         const actions=el('div','agent-actions');
         for(const product of result.products){

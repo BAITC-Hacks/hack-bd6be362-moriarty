@@ -1,12 +1,12 @@
-"""Explicit validated catalogue refresh: python -m app.import_catalog data/products.json"""
+"""Explicit validated catalogue refresh: python -m app.import_catalog --source=ekt"""
+import argparse
 import json
-import sys
 from pathlib import Path
+from dotenv import load_dotenv
 from . import store
 
 
-def run(path):
-    records=json.loads(Path(path).read_text(encoding='utf-8-sig'))
+def validate(records):
     ids=set()
     for p in records:
         for field in ['id','article','name','brand','category','price','currency','unit','specifications','stock','certificate_url','is_demo']:
@@ -18,6 +18,9 @@ def run(path):
         if not isinstance(p['specifications'],dict):raise ValueError('Specifications must be an object')
         if any(type(w['quantity']) is not int or w['quantity']<0 for w in p['stock']):raise ValueError('Invalid stock')
         if p['certificate_url'] and not p['certificate_url'].startswith(('/certificates/','https://')):raise ValueError('Invalid certificate URL')
+
+
+def save(records):
     store.init()
     with store.db() as c:
         for p in records:
@@ -25,5 +28,22 @@ def run(path):
     print(f'Imported {len(records)} products. Existing IDs updated; absent IDs retained.')
 
 
+def run(path):
+    records=json.loads(Path(path).read_text(encoding='utf-8-sig'))
+    validate(records)
+    save(records)
+
+
 if __name__=='__main__':
-    run(sys.argv[1] if len(sys.argv)>1 else store.ROOT/'data/products.json')
+    parser=argparse.ArgumentParser()
+    parser.add_argument('path',nargs='?',default=store.ROOT/'data/products.json')
+    parser.add_argument('--source',choices=['json','ekt'],default='json')
+    args=parser.parse_args()
+    load_dotenv(store.ROOT/'.env')
+    if args.source=='ekt':
+        from .ekt_source import fetch_catalog
+        records=fetch_catalog()
+        validate(records)
+        save(records)
+    else:
+        run(args.path)

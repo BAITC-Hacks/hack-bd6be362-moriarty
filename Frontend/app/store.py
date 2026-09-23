@@ -5,8 +5,10 @@ import secrets
 import sqlite3
 import time
 from pathlib import Path
+from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parent.parent
+load_dotenv(ROOT / '.env')
 DB_PATH = Path(os.getenv('EKT_DB_PATH', ROOT / 'data' / 'app.sqlite3'))
 
 
@@ -22,11 +24,13 @@ def init():
     with db() as c:
         c.executescript('''
         CREATE TABLE IF NOT EXISTS products(id TEXT PRIMARY KEY, payload TEXT NOT NULL);
-        CREATE TABLE IF NOT EXISTS sessions(id TEXT PRIMARY KEY, csrf TEXT NOT NULL, created REAL NOT NULL, touched REAL NOT NULL);
+        CREATE TABLE IF NOT EXISTS sessions(id TEXT PRIMARY KEY, csrf TEXT NOT NULL, created REAL NOT NULL, touched REAL NOT NULL, failed_searches INTEGER NOT NULL DEFAULT 0);
         CREATE TABLE IF NOT EXISTS cart(session TEXT REFERENCES sessions(id) ON DELETE CASCADE, product TEXT REFERENCES products(id), quantity INTEGER NOT NULL CHECK(quantity>0), PRIMARY KEY(session,product));
         CREATE TABLE IF NOT EXISTS pending(session TEXT PRIMARY KEY REFERENCES sessions(id) ON DELETE CASCADE, token TEXT NOT NULL, product TEXT NOT NULL, quantity INTEGER NOT NULL, price INTEGER NOT NULL, created REAL NOT NULL);
         CREATE TABLE IF NOT EXISTS history(id INTEGER PRIMARY KEY, session TEXT REFERENCES sessions(id) ON DELETE CASCADE, role TEXT NOT NULL, text TEXT NOT NULL);
         ''')
+        try:c.execute('ALTER TABLE sessions ADD COLUMN failed_searches INTEGER NOT NULL DEFAULT 0')
+        except sqlite3.OperationalError:pass
         for product in json.loads((ROOT / 'data/products.json').read_text(encoding='utf-8')):
             c.execute('INSERT OR IGNORE INTO products VALUES(?,?)', (product['id'], json.dumps(product, ensure_ascii=False)))
         c.execute('DELETE FROM sessions WHERE touched<?', (time.time() - 86400,))
@@ -41,7 +45,7 @@ def session(sid=None):
             return dict(row)
         sid, csrf = secrets.token_urlsafe(32), secrets.token_urlsafe(32)
         now = time.time()
-        c.execute('INSERT INTO sessions VALUES(?,?,?,?)', (sid, csrf, now, now))
+        c.execute('INSERT INTO sessions(id,csrf,created,touched) VALUES(?,?,?,?)', (sid, csrf, now, now))
         return dict(id=sid, csrf=csrf)
 
 
@@ -129,3 +133,12 @@ def remember(sid, user, answer):
     with db() as c:
         c.executemany('INSERT INTO history(session,role,text) VALUES(?,?,?)', [(sid,'user',user[:4000]),(sid,'assistant',answer[:6000])])
         c.execute('DELETE FROM history WHERE session=? AND id NOT IN (SELECT id FROM history WHERE session=? ORDER BY id DESC LIMIT 16)', (sid,sid))
+
+
+def search_result(sid, failed):
+    with db() as c:
+        if failed:
+            c.execute('UPDATE sessions SET failed_searches=failed_searches+1 WHERE id=?',(sid,))
+        else:
+            c.execute('UPDATE sessions SET failed_searches=0 WHERE id=?',(sid,))
+        return c.execute('SELECT failed_searches FROM sessions WHERE id=?',(sid,)).fetchone()['failed_searches']
